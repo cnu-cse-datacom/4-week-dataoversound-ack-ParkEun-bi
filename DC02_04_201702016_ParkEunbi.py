@@ -26,36 +26,6 @@ My_Student_ID = "201702016"
 
 import pyaudio
 
-#def make_sound(byte_stream):
-#    #ADD pyaudio 
-#    p = pyaudio.PyAudio()
-#    stream = p.open(format=pyaudio.paFloat32,
-#                    channels=1,
-#                    rate=44100,
-#                    output=True)
-    
-#    freq = freqs(byte_stream)
-#    freqs = []
-#    for g in freqs:
-#        f = int(bin(byte_stream),2)
-#        f1 = START_HZ + (STEP_HZ * ((f & 0b11110000) >> 4))
-#        f2 = START_HZ + (STEP_HZ * (f & 0b1111))
-#    freqs.append(HANDSHAKE_END_HZ)
-    
-#    for h in freqs:
-#        ar = np.arange(44100)
-#        sin_f = np.sin(2*np.pi*ar*h/44100).astype(np.float32)
-#        stream.write(sin_f)
-    
-#    sample = 44100
-#    sin_sig = (np.sin(2*np.pi*np.arange(44100)/44100).astype(np.float32))
-#    stream.write(sin_sig)
-#    sin_freq = np.sin(2*np.pi*freq)/sample;
-#    stream.write(sin);
-#    sin_freq = 440
-#    signal = np.sin(2*np.pi*sin_freq*t)
-    
-
 def stereo_to_mono(input_file, output_file):
     inp = wave.open(input_file, 'r')
     params = list(inp.getparams())
@@ -196,35 +166,36 @@ def listen_linux(frame_rate=44100, interval=0.1):
                    byte_stream = byte_stream.replace(My_Student_ID, "")
                    display(byte_stream)
 
-#                byte_stream = RSCodec(FEC_BYTES).encode(byte_stream)
-#                make_sound(byte_stream)
-            
-#            new_byte_stream = RSCodec(FEC_BYTES).encode(byte_stream) #(byte_stream.encode("utf-8"))
-#            new_byte_stream = new_byte_stream.encode("utf-8")
-#            print(new_byte_stream)
+                new_stream = RSCodec(FEC_BYTES).encode(byte_stream.encode("utf-8"))
+                freq = []
+                for h in new_stream:
+                    i = int(bin(h),2)
+                    f_first = (i & 0b11110000)>> 4
+                    ff = START_HZ + (STEP_HZ * f_first)
+                    freq.append(ff)                    
 
-#            for h in new_byte_stream:
-#                i = int(bin(h), 2)
-#                ff = (i & 0b11110000) >> 4
-#                freq1 = START_HZ + STEP_HZ*ff
+                    f_last = i & 0b1111
+                    fb = START_HZ + (STEP_HZ * f_last)
+                    freq.append(fb)
 
-#                if new_byte_stream.index(h) == 0:
-#                   freqs.append(HANDSHAKE_START_HZ)
-#                else:
-#                   freqs.append(freq1)
+                    new_index = new_stream.index(h)
+                freq.append(HANDSHAKE_END_HZ)
 
-#                fl = i & 0b1111
-#                freq2 = START_HZ + STEP_HZ*fl
-#                freqs.append(freq2)
 
-#            freqs.append(HANDSHAKE_END_HZ)
+                p=pyaudio.PyAudio()
+                stream=p.open(format=pyaudio.paFloat32,
+				channels=1,
+				rate=44100,
+				output=True)
 
-#            for j in freqs:
-#                make_sound(stream, j, 0.5)
- 
+                for i in freq:
+                  #  ar = np.arange(44100)
+                  #  sample = np.sin(2*np.pi*ar.astype(numpy.float32)
+                    stream.write(np.sin(2*np.pi*i*np.arange(0,2,1/44100)))
+
             except ReedSolomonError as e:
-                pass
-                print("{}: {}".format(e, byte_stream))
+                 pass
+                 #print("{}: {}".format(e, byte_stream))
 
             packet = []
             in_packet = False
@@ -236,5 +207,5 @@ def listen_linux(frame_rate=44100, interval=0.1):
 if __name__ == '__main__':
     colorama.init(strip=not sys.stdout.isatty())
 
-    #decode_file(sys.argv[1], float(sys.argv[2]))
+    #decode_file(sys.argv[1], float(sys.argv[2])
     listen_linux()
